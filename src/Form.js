@@ -1,21 +1,5 @@
 import {useFormik} from "formik";
-
-const validate = values => {
-  const errors = {};
-
-  if (!values.name) {
-    errors.name = 'Обязательное поле!';
-  } else if (values.name.length < 2) {
-    errors.name = 'Минимум 2 символа для заполнения';
-  }
-
-  if (!values.email) {
-    errors.email = 'Обязательное поле';
-  } else if (!!/^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}$/i.test(values.email)) {
-    errors.email  = 'Неправильный email адрес';
-  }
-  return errors; // функция validate возвращает объект errors
-}
+import * as yup from "yup";
 
 const Form = () => {
   const formik = useFormik({
@@ -27,8 +11,23 @@ const Form = () => {
       text: '',
       terms: false
     },
-    validate,
-    onSubmit: values => console.log(JSON.stringify(values, null, 2))
+    validationSchema: yup.object({
+      name: yup.string()
+        .min(2, 'Минимум 2 символа')
+        .required('Обязательное поле'),
+      email: yup.string()
+        .email('Неправильный email адрес'),
+      amount: yup.number()
+        .min(5, 'Не менее 5')
+        .required('Обязательное поле'),
+      currency: yup.string().required('Выберете валюту'),
+      text: yup.string()
+        .min(10, 'Не менее 10 символов'),
+      terms: yup.boolean()
+        .required('Необходимо согласие')
+        .oneOf([true], 'Необходимо согласие')
+    }),
+    onSubmit: values => console.dir(JSON.stringify(values, null, 2))
   })
 
   return (
@@ -63,6 +62,7 @@ const Form = () => {
         onChange={formik.handleChange}
         onBlur={formik.handleBlur}
       />
+      {formik.errors.amount && formik.touched.amount ? <div>{formik.errors.amount}</div> : null}
       <label htmlFor="currency">Валюта</label>
       <select
         id="currency"
@@ -75,6 +75,7 @@ const Form = () => {
         <option value="UAH">UAH</option>
         <option value="RUB">RUB</option>
       </select>
+      {formik.errors.currency && formik.touched.currency ? <div>{formik.errors.currency}</div> : null}
       <label htmlFor="text">Ваше сообщение</label>
       <textarea
         id="text"
@@ -83,6 +84,7 @@ const Form = () => {
         onChange={formik.handleChange}
         onBlur={formik.handleBlur}
       />
+      {formik.errors.text && formik.touched.text ? <div>{formik.errors.text}</div> : null}
       <label className="checkbox">
         <input
           name="terms"
@@ -91,6 +93,7 @@ const Form = () => {
           onChange={formik.handleChange}/>
         Соглашаетесь с политикой конфиденциальности?
       </label>
+      {formik.errors.terms && formik.touched.terms ? <div>{formik.errors.terms}</div> : null}
       <button type="submit">Отправить</button>
     </form>
   )
